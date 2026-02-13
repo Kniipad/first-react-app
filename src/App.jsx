@@ -1,35 +1,16 @@
-import { useState, useEffect } from 'react'
-import './App.css'
+import { useState, useEffect } from "react";
+import "./App.css";
 import TodoItem from "./TodoItem";
 
-const TODOLIST_API_URL = 'http://localhost:5000/api/todos';
+const TODOLIST_API_URL = "http://localhost:5000/api/todos";
 
 function App() {
   const [todoList, setTodoList] = useState([]);
   const [newTitle, setNewTitle] = useState("");
 
-  // ดึงข้อมูลจาก Flask
-   async function addNewComment(todoId, newComment) {     // เพิ่ม parameter
-    try {
-      const url = `${TODOLIST_API_URL}${todoId}/comments/`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 'message': newComment }),    // ใช้ newComment
-      });
-      if (response.ok) {
-        // 
-        // ******  ลบบรรทัด setNewComments({ ...newComments, [todoId]: "" }); *******
-        // 
-        await fetchTodoList();
-      }
-    } catch (error) {
-      console.error("Error adding new comment:", error);
-    }
-  }
-  
+  // ==============================
+  // Fetch todo list
+  // ==============================
   async function fetchTodoList() {
     try {
       const response = await fetch(TODOLIST_API_URL);
@@ -40,7 +21,6 @@ function App() {
       setTodoList(data);
     } catch (err) {
       console.error(err);
-      alert("Failed to fetch todo list from backend.");
     }
   }
 
@@ -48,13 +28,15 @@ function App() {
     fetchTodoList();
   }, []);
 
-  // เพิ่ม todo
+  // ==============================
+  // Add new todo
+  // ==============================
   async function addNewTodo() {
     try {
       const response = await fetch(TODOLIST_API_URL, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ title: newTitle }),
       });
@@ -71,18 +53,68 @@ function App() {
     }
   }
 
+  // ==============================
+  // Delete todo (frontend only)
+  // ==============================
   function deleteTodo(id) {
     setTodoList(todoList.filter(todo => todo.id !== id));
   }
 
-  function toggleDone(id) {
-    setTodoList(
-      todoList.map(todo =>
-        todo.id === id ? { ...todo, done: !todo.done } : todo
-      )
-    );
+  // ==============================
+  // Toggle done (PATCH backend)
+  // ==============================
+  async function toggleDone(id) {
+    try {
+      const response = await fetch(
+        `${TODOLIST_API_URL}/${id}/toggle/`,
+        { method: "PATCH" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to toggle todo");
+      }
+
+      const updatedTodo = await response.json();
+
+      setTodoList(
+        todoList.map(todo =>
+          todo.id === id ? updatedTodo : todo
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
   }
 
+  // ==============================
+  // Add new comment
+  // ==============================
+  async function addNewComment(todoId, newComment) {
+    try {
+      const response = await fetch(
+        `${TODOLIST_API_URL}/${todoId}/comments/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: newComment }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to add comment");
+      }
+
+      await fetchTodoList();
+    } catch (error) {
+      console.error("Error adding new comment:", error);
+    }
+  }
+
+  // ==============================
+  // Render
+  // ==============================
   return (
     <>
       <h1>Todo List</h1>
@@ -99,14 +131,15 @@ function App() {
         ))}
       </ul>
 
-
-      New:{" "}
-      <input
-        type="text"
-        value={newTitle}
-        onChange={(e) => setNewTitle(e.target.value)}
-      />
-      <button onClick={addNewTodo}>Add</button>
+      <div>
+        New:{" "}
+        <input
+          type="text"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+        />
+        <button onClick={addNewTodo}>Add</button>
+      </div>
     </>
   );
 }

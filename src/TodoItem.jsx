@@ -1,40 +1,38 @@
-import { useState } from 'react'
+import { useState } from "react";
 
 function TodoItem({ todo, toggleDone, deleteTodo, addNewComment }) {
   const [newComment, setNewComment] = useState("");
 
   return (
     <li>
-      <span
-        style={{
-          textDecoration: todo.done ? "line-through" : ""
-        }}
-      >
+      {/* Title */}
+      <span className={todo.done ? "done" : ""}>
         {todo.title}
       </span>
 
+      {/* Toggle button */}
       <button onClick={() => toggleDone(todo.id)}>
         Toggle
       </button>
 
+      {/* Delete button */}
       <button onClick={() => deleteTodo(todo.id)}>
         ❌
       </button>
 
-      {(!todo.comments || todo.comments.length === 0) && (
-        <p>No comments</p>
-      )}
 
-      {todo.comments && todo.comments.length > 0 && (
-        <ul>
-          {todo.comments.map(comment => (
-            <li key={comment.id}>
-              {comment.message}
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Comments */}
+      <div>
+        {todo.comments.length === 0 ? (
+          <p>No comments</p>
+        ) : (
+          todo.comments.map(comment => (
+            <p key={comment.id}>{comment.message}</p>
+          ))
+        )}
+      </div>
 
+      {/* Add comment */}
       <div className="new-comment-forms">
         <input
           type="text"
