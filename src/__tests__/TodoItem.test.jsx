@@ -1,5 +1,8 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+
+
+import { render, screen, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { expect, vi } from 'vitest'
 import TodoItem from '../TodoItem.jsx'
 
 const baseTodo = {
@@ -7,7 +10,7 @@ const baseTodo = {
   title: 'Sample Todo',
   done: false,
   comments: [],
-}
+};
 
 describe('TodoItem', () => {
 
@@ -19,10 +22,10 @@ describe('TodoItem', () => {
         deleteTodo={() => {}}
         addNewComment={() => {}}
       />
-    )
+    );
 
-    expect(screen.getByText('Sample Todo')).toBeInTheDocument()
-  })
+    expect(screen.getByText('Sample Todo')).toBeInTheDocument();
+  });
 
   it('shows "No comments" when there are no comments', () => {
     render(
@@ -32,51 +35,66 @@ describe('TodoItem', () => {
         deleteTodo={() => {}}
         addNewComment={() => {}}
       />
-    )
+    );
 
-    expect(screen.getByText('No comments')).toBeInTheDocument()
-  })
+    expect(screen.getByText('No comments')).toBeInTheDocument();
+  });
 
-  it('does not show "No comments" when there are comments', () => {
-    const todoWithComments = {
-      ...baseTodo,
-      comments: [
-        { id: 1, message: 'First comment' }
-      ]
-    }
+  it('makes callback to toggleDone when Toggle button is clicked', () => {
+    const onToggleDone = vi.fn();
 
     render(
       <TodoItem
-        todo={todoWithComments}
-        toggleDone={() => {}}
+        todo={baseTodo}
+        toggleDone={onToggleDone}
         deleteTodo={() => {}}
         addNewComment={() => {}}
       />
-    )
+    );
 
-    expect(screen.queryByText('No comments')).not.toBeInTheDocument()
-  })
+    const button = screen.getByRole('button', { name: /toggle/i });
+    fireEvent.click(button);
 
-  it('renders comment messages correctly', () => {
-    const todoWithComments = {
-      ...baseTodo,
-      comments: [
-        { id: 1, message: 'First comment' },
-        { id: 2, message: 'Second comment' }
-      ]
-    }
+    expect(onToggleDone).toHaveBeenCalledWith(baseTodo.id);
+  });
+
+  it('makes callback to deleteTodo when delete button is clicked', () => {
+    const onDeleteTodo = vi.fn();
 
     render(
       <TodoItem
-        todo={todoWithComments}
+        todo={baseTodo}
         toggleDone={() => {}}
-        deleteTodo={() => {}}
+        deleteTodo={onDeleteTodo}
         addNewComment={() => {}}
       />
-    )
+    );
 
-    expect(screen.getByText('First comment')).toBeInTheDocument()
-    expect(screen.getByText('Second comment')).toBeInTheDocument()
-  })
+    const button = screen.getByRole('button', { name: /❌/i });
+    fireEvent.click(button);
 
-})
+    expect(onDeleteTodo).toHaveBeenCalledWith(baseTodo.id);
+  });
+
+  it('makes callback to addNewComment when a new comment is added', async () => {
+    const onAddNewComment = vi.fn();
+
+    render(
+      <TodoItem
+        todo={baseTodo}
+        toggleDone={() => {}}
+        deleteTodo={() => {}}
+        addNewComment={onAddNewComment}
+      />
+    );
+
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'New comment');
+
+    const button = screen.getByRole('button', { name: /add comment/i });
+    fireEvent.click(button);
+
+    expect(onAddNewComment).toHaveBeenCalledWith(baseTodo.id, 'New comment');
+  });
+
+});

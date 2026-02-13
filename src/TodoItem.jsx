@@ -1,66 +1,57 @@
 import { useState } from 'react'
 
 function TodoItem({ todo, toggleDone, deleteTodo, addNewComment }) {
-  const [newComment, setNewComment] = useState('')
-
-  const handleAddComment = () => {
-    if (!newComment.trim()) return
-
-    if (addNewComment) {
-      addNewComment(todo.id, newComment)
-    }
-
-    setNewComment('')
-  }
+  const [newComment, setNewComment] = useState("");
 
   return (
     <li>
-      {/* Title */}
       <span
         style={{
-          textDecoration: todo.done ? 'line-through' : 'none'
+          textDecoration: todo.done ? "line-through" : ""
         }}
       >
         {todo.title}
       </span>
 
-      {/* Buttons */}
-      <button onClick={() => toggleDone && toggleDone(todo.id)}>
-        Done
+      <button onClick={() => toggleDone(todo.id)}>
+        Toggle
       </button>
 
-      <button onClick={() => deleteTodo && deleteTodo(todo.id)}>
+      <button onClick={() => deleteTodo(todo.id)}>
         ❌
       </button>
 
-      {/* Add comment form */}
-      <div className="new-comment-forms">
-        <input
-          type="text"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-        />
-        <button onClick={handleAddComment}>
-          Add Comment
-        </button>
-      </div>
-
-      {/* Comments section */}
-      {todo.comments && todo.comments.length === 0 && (
+      {(!todo.comments || todo.comments.length === 0) && (
         <p>No comments</p>
       )}
 
       {todo.comments && todo.comments.length > 0 && (
         <ul>
-          {todo.comments.map((comment) => (
+          {todo.comments.map(comment => (
             <li key={comment.id}>
               {comment.message}
             </li>
           ))}
         </ul>
       )}
+
+      <div className="new-comment-forms">
+        <input
+          type="text"
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+        />
+        <button
+          onClick={() => {
+            addNewComment(todo.id, newComment);
+            setNewComment("");
+          }}
+        >
+          Add Comment
+        </button>
+      </div>
     </li>
-  )
+  );
 }
 
-export default TodoItem
+export default TodoItem;
